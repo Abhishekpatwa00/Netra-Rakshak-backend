@@ -39,8 +39,9 @@ async def predict(file: UploadFile = File(...)):
         # 1. Resize image strictly to 224 x 224
         image = image.resize((224, 224), Image.Resampling.LANCZOS)
 
-        # 2. Convert to Float32 array and normalize pixel values to [0, 1]
-        img_array = np.array(image, dtype=np.float32) / 255.0
+        # 2. Convert to Float32 array in [0, 255] range as expected by the MATLAB-trained ResNet-50 model
+        # Do NOT divide by 255.0; MATLAB's ResNet50 input layer expects raw [0, 255] range.
+        img_array = np.array(image, dtype=np.float32)
         
         # 3. Transpose from (Height, Width, Channels) [224, 224, 3] 
         #    to (Channels, Height, Width) [3, 224, 224]
@@ -55,7 +56,7 @@ async def predict(file: UploadFile = File(...)):
 
         return {
             "status": "success",
-            "input_shape": list(img_array.shape),  # Will output [1, 3, 224, 224]
+            "input_shape": list(img_array.shape),
             "predictions": predictions
         }
     except Exception as e:
